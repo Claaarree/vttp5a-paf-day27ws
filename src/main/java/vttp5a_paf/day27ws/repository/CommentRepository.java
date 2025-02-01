@@ -16,8 +16,6 @@ import org.springframework.stereotype.Repository;
 
 import com.mongodb.client.result.UpdateResult;
 
-import jakarta.json.JsonObject;
-
 @Repository
 public class CommentRepository {
     
@@ -40,15 +38,6 @@ public class CommentRepository {
         return oid.toHexString();
     }
 
-    // db.games.find({_id: ObjectId(<commentId>)})
-    public Optional<Document> getComment(String commentId) {
-        ObjectId oid = new ObjectId(commentId);
-        Optional<Document> opt = Optional
-                .ofNullable(template.findById(oid, Document.class, MONGO_C_COMMENTS));
-
-        return opt;
-    }
-
     // db.comments.update(
     //     {_id: ObjectId(<oid>)},
     //     {
@@ -59,11 +48,20 @@ public class CommentRepository {
         ObjectId oid = new ObjectId(commentId);
         Query query = Query.query(Criteria.where(MONGO_F_OID).is(oid));
         Update updateOps = new Update()
-                .push("edited", updateEdit.toJson());
-
+        .push("edited", updateEdit.toJson());
+        
         UpdateResult updateResult = template
         .updateMulti(query, updateOps, Document.class, MONGO_C_COMMENTS);
-
+        
         return updateResult.getModifiedCount();
+    }
+
+    // db.games.find({_id: ObjectId(<commentId>)})
+    public Optional<Document> getComment(String commentId) {
+        ObjectId oid = new ObjectId(commentId);
+        Optional<Document> opt = Optional
+                .ofNullable(template.findById(oid, Document.class, MONGO_C_COMMENTS));
+    
+        return opt;
     }
 }

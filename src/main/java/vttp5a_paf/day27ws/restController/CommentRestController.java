@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -24,7 +25,7 @@ public class CommentRestController {
     @PostMapping(path = "/review", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
     produces = "application/json")
     public ResponseEntity<String> handleReview(@RequestBody MultiValueMap<String, String> review) {
-        // System.out.println(review);
+        System.out.println(review);
         JsonObject jObject = commentService.handleComment(review);
         return createResponseEntity(jObject);
     }
@@ -34,6 +35,18 @@ public class CommentRestController {
     public ResponseEntity<String> updateReview(@PathVariable(name = "review_id") String reviewId,
     @RequestBody String jsonUpdate) {
         JsonObject jObject = commentService.updateComment(reviewId, jsonUpdate);
+        return createResponseEntity(jObject);
+    }
+
+    @GetMapping(path = "/review/{review_id}", produces = "application/json")
+    public ResponseEntity<String> getReview(@PathVariable (name = "review_id") String reviewId) {
+        JsonObject jObject = commentService.getLatestComment(reviewId);
+        return createResponseEntity(jObject);
+    }
+
+    @GetMapping(path = "/review/{review_id}/history", produces = "application/json")
+    public ResponseEntity<String> getReviewHistory(@PathVariable (name = "review_id") String reviewId) {
+        JsonObject jObject = commentService.getCommentHistory(reviewId);
         return createResponseEntity(jObject);
     }
 

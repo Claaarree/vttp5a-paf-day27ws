@@ -3,6 +3,8 @@ package vttp5a_paf.day27ws.service;
 import java.io.StringReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
@@ -11,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 
 import jakarta.json.Json;
-import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 import vttp5a_paf.day27ws.repository.CommentRepository;
@@ -37,7 +38,7 @@ public class CommentService {
         } else {
             Document doc = new Document();
             doc.append("user", review.getFirst("name"));
-            doc.append("rating", review.getFirst("rating"));
+            doc.append("rating", Integer.parseInt(review.getFirst("rating")));
             doc.append("comment", review.getFirst("comment"));
             doc.append("ID", gameId);
             doc.append("posted", LocalDate.now().toString());
@@ -63,5 +64,48 @@ public class CommentService {
         }
 
         return jObject.build();
+    }
+
+    public JsonObject getLatestComment(String reviewId) {
+        JsonObjectBuilder jObject = Json.createObjectBuilder();
+        
+        Optional<Document> opt = commentRepository.getComment(reviewId);
+        if(opt.isEmpty()){
+            jObject.add("error", "The provided comment Id does not exist!");
+            return jObject.build();
+        } else {
+            Document doc = opt.get();
+            List<Document> editedList = doc.getList("edited", Document.class, new ArrayList<>());
+            if (editedList.isEmpty()) {
+                doc.append("edited", false);
+            } else {
+                Document latestUpdate = editedList.getFirst();
+                Integer rating = latestUpdate.getInteger("rating");
+                String comment = latestUpdate.getString("comment");
+                String posted = latestUpdate.getString("posted");
+
+                doc.replace("rating", rating);
+                doc.replace("comment", comment);
+                doc.replace("posted", posted);
+                doc.replace("edited", true);
+            }
+            doc.append("timestamp", LocalDateTime.now().toString());
+
+            return Json.createReader(new StringReader(doc.toJson())).readObject();
+        }
+    }
+
+    public JsonObject getCommentHistory(String reviewId) {
+        JsonObjectBuilder jObject = Json.createObjectBuilder();
+
+        Optional<Document> opt = commentRepository.getComment(reviewId);
+        if(opt.isEmpty()){
+            jObject.add("error", "The provided comment Id does not exist!");
+            return jObject.build();
+        } else {
+            Document doc = opt.get();
+            doc.append("timestamp", LocalDateTime.now().toString());
+            return Json.createReader(new StringReader(doc.toJson())).readObject();
+        }
     }
 }
