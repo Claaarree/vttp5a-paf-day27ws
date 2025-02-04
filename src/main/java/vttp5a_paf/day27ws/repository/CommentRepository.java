@@ -48,7 +48,8 @@ public class CommentRepository {
         ObjectId oid = new ObjectId(commentId);
         Query query = Query.query(Criteria.where(MONGO_F_OID).is(oid));
         Update updateOps = new Update()
-        .push("edited", updateEdit.toJson());
+        .push("edited", updateEdit);
+        // just push as a Document directly so can cast back to a Document later when taking it out
         
         UpdateResult updateResult = template
         .updateMulti(query, updateOps, Document.class, MONGO_C_COMMENTS);
